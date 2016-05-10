@@ -32,7 +32,7 @@ IC = [-35;0];
 parneg = [0, duree, g_L, g_Ca, g_K, V_L, ...
         V_Ca, V_K, V1, V2, V3, V4, C, T0]; %paramètres pour t<0
 solneg=ode23(@(t,x) morrislecar(t,x,parneg),[t0,0],IC,options);% solution pour t<0
-ICpos=[solneg.y(1,length(solneg.y)),solneg.y(2,length(solneg.y))]% condition initiale pour t>0
+ICpos=[solneg.y(1,length(solneg.y)),solneg.y(2,length(solneg.y))];% condition initiale pour t>0
 solpos=ode23(@(t,x) morrislecar(t,x,par),[0,tfinal],ICpos,options);% solution pour t>0
 sol=vertcat(horzcat(transpose(solneg.x),transpose(solneg.y(1,:))),...
     horzcat(transpose(solpos.x),transpose(solpos.y(1,:))));%concatenation solutions
@@ -43,3 +43,34 @@ plot(sol(:,1),sol(:,2))
 xlabel('temps (ms)')
 ylabel('V (mV)')
 axis tight
+
+%Recherche Précision
+options = odeset('RelTol',1e-9,'AbsTol',1e-9);
+solneg=ode23(@(t,x) morrislecar(t,x,parneg),[t0,0],IC,options);% solution pour t<0
+solpos=ode23(@(t,x) morrislecar(t,x,par),[0,tfinal],ICpos,options);% solution pour t>0
+sol_precise=vertcat(horzcat(transpose(solneg.x),transpose(solneg.y(1,:))),...
+    horzcat(transpose(solpos.x),transpose(solpos.y(1,:))));%concatenation solutions
+
+figure(1); clf;
+plot(sol_precise(:,1),sol_precise(:,2))
+xlabel('temps (ms)')
+ylabel('V (mV)')
+axis tight
+
+%%Modification Précision
+L=ones(10,1);
+for i=0:9
+    L(i+1)=[1e-9*10^i];
+end
+%for i=L
+    options = odeset('RelTol',1,'AbsTol',1);
+    solneg=ode23(@(t,x) morrislecar(t,x,parneg),[t0,0],IC,options);
+    solpos=ode23(@(t,x) morrislecar(t,x,par),[0,tfinal],ICpos,options);
+    sol_modif_prec=vertcat(horzcat(transpose(solneg.x),transpose(solneg.y(1,:))),...
+    horzcat(transpose(solpos.x),transpose(solpos.y(1,:))));
+figure(2); clf;
+plot(sol_precise(:,1),sol_precise(:,2))
+xlabel('temps (ms)')
+ylabel('V (mV)')
+axis tight
+
