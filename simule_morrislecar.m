@@ -1,5 +1,7 @@
+function sol=simule_morrislecar()
+  % SIMULE_MORRISLECAR modele neurone de Morris-Lecar
 
-% Initialisation des paramÃ¨tres
+%>>> Initialisation des paramètres
 I = 400;      % courant applique (muA/cm2)
 duree = 200;  % duree de l'application du courant
 
@@ -19,7 +21,7 @@ T0 =    15;   % Constante de temps pour ouverture des canaux (ms) (1/lambda dans
 par = [I, duree, g_L, g_Ca, g_K, V_L, ...
         V_Ca, V_K, V1, V2, V3, V4, C, T0];
 
-% paramÃ¨tres de simulation
+% paramètres de simulation
 t0 = -20;
 tfinal = 200;
 tspan = [t0,tfinal];
@@ -28,49 +30,38 @@ options = odeset();
 % Conditions initiales
 IC = [-35;0];
     
-%Solutions
-parneg = [0, duree, g_L, g_Ca, g_K, V_L, ...
-        V_Ca, V_K, V1, V2, V3, V4, C, T0]; %paramÃ¨tres pour t<0
-solneg=ode23(@(t,x) morrislecar(t,x,parneg),[t0,0],IC,options);% solution pour t<0
-ICpos=[solneg.y(1,length(solneg.y)),solneg.y(2,length(solneg.y))];% condition initiale pour t>0
-solpos=ode23(@(t,x) morrislecar(t,x,par),[0,tfinal],ICpos,options);% solution pour t>0
-sol=vertcat(horzcat(transpose(solneg.x),transpose(solneg.y(1,:))),...
-    horzcat(transpose(solpos.x),transpose(solpos.y(1,:))));%concatenation solutions
+% >>>Solutions
+sol = ode23(@morrislecar,tspan,IC,options);
 
-%Affichage solution
+% >>> Sortie Graphique
 figure(1); clf;
-plot(sol(:,1),sol(:,2))
+plot(sol.x,sol.y(1,:))
 xlabel('temps (ms)')
 ylabel('V (mV)')
 axis tight
 
-%Recherche PrÃ©cision
-options = odeset('RelTol',1e-9,'AbsTol',1e-9);
-solneg=ode23(@(t,x) morrislecar(t,x,parneg),[t0,0],IC,options);% solution pour t<0
-solpos=ode23(@(t,x) morrislecar(t,x,par),[0,tfinal],ICpos,options);% solution pour t>0
-sol_precise=vertcat(horzcat(transpose(solneg.x),transpose(solneg.y(1,:))),...
-    horzcat(transpose(solpos.x),transpose(solpos.y(1,:))));%concatenation solutions
+%Recherche Précision
+options = odeset('AbsTol',1e-9,'RelTol',1e-6);
+sol_precise = ode23(@morrislecar,tspan,IC,options);
+figure(1);
+hold on
+plot(sol.x,sol.y(1,:),'r--')
 
-figure(1); clf;
-plot(sol_precise(:,1),sol_precise(:,2))
-xlabel('temps (ms)')
-ylabel('V (mV)')
-axis tight
+% Fonctions imbriquées
 
-%%Modification PrÃ©cision
-L=ones(10,1);
-for i=0:9
-    L(i+1)=[1e-9*10^i];
+    function dydt = morrislecar(t,y)
+        % MORRISLECAR equations du modele neurone de Morris-Lecar
+        Minf=1/2*(1+tanh((y(1)-V1)/V2));
+        Ninf=1/2*(1+tanh((y(1)-V3)/V4));
+        lambN=1/T0*cosh((y(1)-V3)/(2*V4));
+
+        if t<0
+            dydt=[1/C*(-g_L*(y(1)-V_L)-g_Ca*Minf*(y(1)-V_Ca)...
+        -g_K*y(2)*(y(1)-V_K));lambN*(Ninf-y(2))];
+        else 
+            dydt=[1/C*(I-g_L*(y(1)-V_L)-g_Ca*Minf*(y(1)-V_Ca)...
+        -g_K*y(2)*(y(1)-V_K));lambN*(Ninf-y(2))];
+        end
+    end
+
 end
-%for i=L
-    options = odeset('RelTol',1,'AbsTol',1);
-    solneg=ode23(@(t,x) morrislecar(t,x,parneg),[t0,0],IC,options);
-    solpos=ode23(@(t,x) morrislecar(t,x,par),[0,tfinal],ICpos,options);
-    sol_modif_prec=vertcat(horzcat(transpose(solneg.x),transpose(solneg.y(1,:))),...
-    horzcat(transpose(solpos.x),transpose(solpos.y(1,:))));
-figure(2); clf;
-plot(sol_precise(:,1),sol_precise(:,2))
-xlabel('temps (ms)')
-ylabel('V (mV)')
-axis tight
-
