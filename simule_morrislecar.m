@@ -1,7 +1,7 @@
 function sol=simule_morrislecar()
   % SIMULE_MORRISLECAR modele neurone de Morris-Lecar
 
-%>>> Initialisation des paramËtres
+%>>> Initialisation des param√®tres
 I = 400;      % courant applique (muA/cm2)
 duree = 200;  % duree de l'application du courant
 
@@ -21,7 +21,7 @@ T0 =    15;   % Constante de temps pour ouverture des canaux (ms) (1/lambda dans
 par = [I, duree, g_L, g_Ca, g_K, V_L, ...
         V_Ca, V_K, V1, V2, V3, V4, C, T0];
 
-% paramËtres de simulation
+% param√®tres de simulation
 t0 = -20;
 tfinal = 200;
 tspan = [t0,tfinal];
@@ -40,15 +40,25 @@ xlabel('temps (ms)')
 ylabel('V (mV)')
 axis tight
 
-%Recherche PrÈcision
+% Recherche Pr√©cision
 options = odeset('AbsTol',1e-9,'RelTol',1e-6);
 sol_precise = ode23(@morrislecar,tspan,IC,options);
 figure(1);
 hold on
 plot(sol.x,sol.y(1,:),'r--')
 
-% Fonctions imbriquÈes
+%plot des nullclines
+figure(2);clf;
+plot(sol.y(1,:),sol.y(2,:))
+hold on
+vv = linspace(-60,60);
+Mifty=1/2*(1+tanh((vv-V1)/V2))
+Nifty=1/2*(1+tanh((vv-V3)/V4));
+v_null = (I-g_L.*(vv-V_L)-g_Ca.*Mifty.*(vv-V_Ca))/(g_K.*(vv-V_K))
+n_null = Nifty;
+plot(vv,v_null,vv,n_null)
 
+% Fonctions imbriqu√©es
     function dydt = morrislecar(t,y)
         % MORRISLECAR equations du modele neurone de Morris-Lecar
         Minf=1/2*(1+tanh((y(1)-V1)/V2));
