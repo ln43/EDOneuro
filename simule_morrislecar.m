@@ -46,17 +46,50 @@ sol_precise = ode23(@morrislecar,tspan,IC,options);
 figure(1);
 hold on
 plot(sol.x,sol.y(1,:),'r--')
+title('V en fonction de t')
+legend('Abs Tol 1e-3', 'Abs Tol 1e-9')
 
 %plot des nullclines
 figure(2);clf;
 plot(sol.y(1,:),sol.y(2,:))
 hold on
 vv = linspace(-60,60);
-Mifty=1/2*(1+tanh((vv-V1)/V2))
+Mifty=1/2*(1+tanh((vv-V1)/V2));
 Nifty=1/2*(1+tanh((vv-V3)/V4));
-v_null = (I-g_L.*(vv-V_L)-g_Ca.*Mifty.*(vv-V_Ca))/(g_K.*(vv-V_K))
+i=2
+legendinfo{1}=['Trajectoire de (V,N)']
+for I=100:100:500
+    v_null = (I-g_L.*(vv-V_L)-g_Ca.*Mifty.*(vv-V_Ca))./(g_K.*(vv-V_K));
+    solV = ode23(@morrislecar,[0,200],IC,options);
+    figure(2);
+    plot(vv,v_null,'--')
+    legendinfo{i}=['Isocline Nulle V, I=' num2str(I)]
+    hold on
+
+    figure(3);
+    plot(solV.x,solV.y(1,:))
+    legendinfo2{i-1}=['I=' num2str(I)]
+    hold on
+    i=i+1
+end
+
+figure(2)
 n_null = Nifty;
-plot(vv,v_null,vv,n_null)
+plot(vv,n_null,'--')
+ylim([0,1.4])
+legendinfo{7}=['Isocline nulle de N']
+legend(legendinfo)
+title('Portrait de phase')
+xlabel('V(t)')
+ylabel('N(t)')
+
+figure(3)
+legend(legendinfo2)
+xlabel('temps (ms)')
+ylabel('V (mV)')
+title('V en fonction de t')
+axis tight
+
 
 % Fonctions imbriquées
     function dydt = morrislecar(t,y)
