@@ -36,6 +36,7 @@ sol = ode23(@morrislecar,tspan,IC,options);
 % >>> Sortie Graphique 1
 figure(1); clf;
 plot(sol.x,sol.y(1,:))
+hold on
 xlabel('temps (ms)')
 ylabel('V (mV)')
 axis tight
@@ -43,8 +44,6 @@ axis tight
 % >>> Recherche Precision
 options = odeset('AbsTol',1e-9,'RelTol',1e-6);
 sol_precise = ode23(@morrislecar,tspan,IC,options);
-figure(1);
-hold on
 plot(sol.x,sol.y(1,:),'r--')
 title('V en fonction de t')
 legend('Abs Tol 1e-3', 'Abs Tol 1e-9')
@@ -160,7 +159,19 @@ for ind=1:1:4
 end
 
 % >>> Pacemaker
+V1 = -1;
+V3 = 10;
+I = 50;
+tspan = [0,1000];
 
+% >>> Solutions
+sol_pace = ode23(@morrislecar,tspan,IC,options);
+figure(6); clf;
+plot(sol_pace.x,sol_pace.y(1,:))
+xlabel('temps (ms)')
+ylabel('V (mV)')
+title('Pacemaker')
+axis tight
 
 % >>> Fonctions imbriquees
     function dydt = morrislecar(t,y)
