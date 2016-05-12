@@ -122,6 +122,45 @@ hold on
 plot(100:5:500,y_stst(1,:),'k--') % plot le premier élément de y_stst en traits discontinus
 title('Diagramme de bifurcation')
 
+% >>> Perturbation des parametres
+
+I=300;
+sol = ode23(@morrislecar,tspan,IC,options);
+
+figure(5);clf;
+for ind=1:1:4
+    if ind==1
+        g_Ca = 8;
+    else if ind==2
+            V3=12; g_Ca=4;
+        else if ind==3
+                T0 = 30; g_Ca=4; V3=-1;
+            else 
+                g_L = 1; g_Ca=4; V3=-1; T0=15;
+            end
+        end
+    end
+    subplot(2,2,ind)
+    sol_pertub = ode23(@morrislecar,tspan,IC,options);
+    plot(sol.x,sol.y(1,:),sol_pertub.x,sol_pertub.y(1,:),'--')
+    xlabel('temps (ms)')
+    ylabel('V (mV)')
+    if ind==1
+        title('g_{Ca}=8');
+    else if ind==2
+            title('V_3=12');
+        else if ind==3
+                title('T_0 = 30');
+            else 
+                title('g_L = 1');
+            end
+        end
+    end
+    axis tight
+end
+
+% >>> Pacemaker
+
 
 % >>> Fonctions imbriquees
     function dydt = morrislecar(t,y)
